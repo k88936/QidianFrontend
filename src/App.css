@@ -1,16 +1,12 @@
 body {
   background-color: #f0f0f0; /* 设置页面背景颜色 */
-  margin: 0;
-  padding: 0;
   align-items: flex-start;
   font-family: Arial, sans-serif;
 }
 
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
   text-align: center;
+  width: 100%;
 }
 
 .logo {

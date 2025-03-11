@@ -1,72 +1,86 @@
-import {useState} from 'react'
-import './App.css'
+import React, {useState} from 'react';
+import {BrowserRouter as Router, Route, Routes, Link} from 'react-router-dom';
+import Home from './home.jsx';
+import Schools from './Schools.jsx'; // 引入院校库页面组件
+import Subjects from './Subjects.jsx'; // 引入学科分类页面组件
+import HelpCenter from './HelpCenter.jsx'; // 引入帮助中心页面组件
 // 引入MUI组件
-import TextField from '@mui/material/TextField'
-import Button from '@mui/material/Button'
-import Box from '@mui/material/Box'
-import Paper from '@mui/material/Paper' // 添加Paper组件
+import AppBar from '@mui/material/AppBar';
+import Toolbar from '@mui/material/Toolbar';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import IconButton from '@mui/material/IconButton';
+import Avatar from '@mui/material/Avatar';
+import LanguageIcon from '@mui/icons-material/Language';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
 
 function App() {
-    const [searchQuery, setSearchQuery] = useState('') // 添加搜索框状态
+    const [anchorEl, setAnchorEl] = useState(null);
+    const [language, setLanguage] = useState('中文');
 
-    // 添加处理搜索框输入的函数
-    const handleSearchChange = (event) => {
-        setSearchQuery(event.target.value)
-    }
+    const handleMenuOpen = (event) => {
+        setAnchorEl(event.currentTarget);
+    };
 
-    // 添加处理搜索提交的函数
-    const handleSearchSubmit = (event) => {
-        event.preventDefault()
-        // 这里可以添加搜索逻辑，比如跳转到搜索结果页
-        console.log('Search query:', searchQuery)
+    const handleMenuClose = () => {
+        setAnchorEl(null);
+    };
 
-        // 添加对后端search的调用，指定端口号8080
-        fetch(`http://localhost:8080/search?query=${encodeURIComponent(searchQuery)}`)
-            .then(response => response.json())
-            .then(data => {
-                console.log('Search results:', data)
-                // 处理搜索结果，比如更新状态或跳转页面
-            })
-            .catch(error => {
-                console.error('Error fetching search results:', error)
-            })
-    }
+    const handleLanguageChange = (lang) => {
+        setLanguage(lang);
+        handleMenuClose();
+    };
 
     return (
-        <div className="search-container">
-            <Paper elevation={3} sx={{
-                padding: '20px', maxWidth: '400px',
-                marginTop: 0,
-                alignSelf: 'flex-start',
-            }}> 
-                <Box
-                    component="form"
-                    onSubmit={handleSearchSubmit}
-                    noValidate
-                    autoComplete="on"
-                    className="search-form"
-                    sx={{
-                        display: 'flex',
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                    }}
-                >
-                    <TextField
-                        id="outlined-basic"
-                        label="Search..."
-                        variant="outlined"
-                        value={searchQuery}
-                        onChange={handleSearchChange}
-                        sx={{width: '300px', height: '56px', marginRight: '10px'}} // 添加右侧间距
-                    />
-                    <Button type="submit" variant="contained" color="primary" sx={{height: '56px'}}>
-                        Search
-                    </Button>
-                </Box>
-            </Paper>
-        </div>
-    )
+        <Router>
+            <AppBar position="static">
+                <Toolbar>
+                    <Typography variant="h6" component="div" sx={{flexGrow: 1}}>
+                        博导通
+                        <Typography variant="subtitle1" component="span" sx={{marginLeft: '10px'}}>
+                            精准匹配学术引路人
+                        </Typography>
+                    </Typography>
+                    <Box sx={{display: 'flex', alignItems: 'center'}}>
+                        <Button color="inherit" component={Link} to="/">首页</Button>
+                        {/*<Button color="inherit">导师搜索</Button>*/}
+                        <Button color="inherit" component={Link} to="/schools" disabled>院校库</Button> {/* 禁用院校库按钮 */}
+                        <Button color="inherit" component={Link} to="/subjects" disabled>学科分类</Button> {/* 禁用学科分类按钮 */}
+                        <Button color="inherit" component={Link} to="/help-center" disabled>帮助中心</Button> {/* 禁用帮助中心按钮 */}
+                        <IconButton
+                            color="inherit"
+                            onClick={handleMenuOpen}
+                            aria-controls="language-menu"
+                            aria-haspopup="true"
+                        >
+                            <LanguageIcon/>
+                        </IconButton>
+                        <Menu
+                            id="language-menu"
+                            anchorEl={anchorEl}
+                            keepMounted
+                            open={Boolean(anchorEl)}
+                            onClose={handleMenuClose}
+                        >
+                            <MenuItem onClick={() => handleLanguageChange('中文')}>中文</MenuItem>
+                            <MenuItem onClick={() => handleLanguageChange('English')}>English</MenuItem>
+                        </Menu>
+                        <Button color="inherit">登录/注册</Button>
+                        <Avatar sx={{marginLeft: '10px'}}>U</Avatar>
+                    </Box>
+                </Toolbar>
+            </AppBar>
+            <Routes>
+                <Route path="/" element={<Home/>}/>
+                <Route path="/schools" element={<Schools/>}/> {/* 添加院校库路由 */}
+                <Route path="/subjects" element={<Subjects/>}/> {/* 添加学科分类路由 */}
+                <Route path="/help-center" element={<HelpCenter/>}/> {/* 添加帮助中心路由 */}
+                {/* 其他路由可以在这里添加 */}
+            </Routes>
+        </Router>
+    );
 }
 
-export default App
+export default App;
