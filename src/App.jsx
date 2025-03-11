@@ -4,6 +4,7 @@ import Home from './home.jsx';
 import Schools from './Schools.jsx'; // 引入院校库页面组件
 import Subjects from './Subjects.jsx'; // 引入学科分类页面组件
 import HelpCenter from './HelpCenter.jsx'; // 引入帮助中心页面组件
+import Search from './Search.jsx'; // 引入搜索页面组件
 // 引入MUI组件
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
@@ -46,9 +47,12 @@ function App() {
                     <Box sx={{display: 'flex', alignItems: 'center'}}>
                         <Button color="inherit" component={Link} to="/">首页</Button>
                         {/*<Button color="inherit">导师搜索</Button>*/}
-                        <Button color="inherit" component={Link} to="/schools" disabled>院校库</Button> {/* 禁用院校库按钮 */}
-                        <Button color="inherit" component={Link} to="/subjects" disabled>学科分类</Button> {/* 禁用学科分类按钮 */}
-                        <Button color="inherit" component={Link} to="/help-center" disabled>帮助中心</Button> {/* 禁用帮助中心按钮 */}
+                        <Button color="inherit" component={Link} to="/schools"
+                                disabled>院校库</Button> {/* 禁用院校库按钮 */}
+                        <Button color="inherit" component={Link} to="/subjects"
+                                disabled>学科分类</Button> {/* 禁用学科分类按钮 */}
+                        <Button color="inherit" component={Link} to="/help-center"
+                                disabled>帮助中心</Button> {/* 禁用帮助中心按钮 */}
                         <IconButton
                             color="inherit"
                             onClick={handleMenuOpen}
@@ -77,6 +81,7 @@ function App() {
                 <Route path="/schools" element={<Schools/>}/> {/* 添加院校库路由 */}
                 <Route path="/subjects" element={<Subjects/>}/> {/* 添加学科分类路由 */}
                 <Route path="/help-center" element={<HelpCenter/>}/> {/* 添加帮助中心路由 */}
+                <Route path="/search" element={<Search/>}/>
                 {/* 其他路由可以在这里添加 */}
             </Routes>
         </Router>

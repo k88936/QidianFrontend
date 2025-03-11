@@ -15,9 +15,12 @@ import MenuItem from '@mui/material/MenuItem';
 import Paper from '@mui/material/Paper'
 // 新增轮播图组件
 import Carousel from 'react-material-ui-carousel'
+// 新增 useNavigate 钩子
+import { useNavigate } from 'react-router-dom';
 
 function Home() {
     const [searchQuery, setSearchQuery] = useState('')
+    const navigate = useNavigate(); // 新增导航钩子
 
     const handleSearchChange = (event) => {
         setSearchQuery(event.target.value)
@@ -25,23 +28,12 @@ function Home() {
 
     const handleSearchSubmit = (event) => {
         event.preventDefault()
-        console.log('Search query:', searchQuery)
-        fetch(`http://localhost:8080/search?query=${encodeURIComponent(searchQuery)}`)
-            .then(response => response.json())
-            .then(data => {
-                console.log('Search results:', data)
-            })
-            .catch(error => {
-                console.error('Error fetching search results:', error)
-            })
+        // 导航到 Search 页面并传递查询参数
+        navigate(`/search?query=${encodeURIComponent(searchQuery)}`);
     }
 
     const handleTagClick = (tag) => {
         setSearchQuery(tag)
-        handleSearchSubmit({
-            preventDefault: () => {
-            }
-        }) // 模拟表单提交
     }
 
     return (
@@ -109,7 +101,7 @@ function Home() {
                     </Box>
                     {/* 筛选快捷入口 */}
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', marginTop: '2vh' }}>
-                        {['人工智能', '清华大学', '生物医学工程'].map((tag, index) => (
+                        {['张三', '清华大学', '生物医学工程'].map((tag, index) => (
                             <Button
                                 key={index}
                                 onClick={() => handleTagClick(tag)}
