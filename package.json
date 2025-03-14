@@ -14,6 +14,7 @@
     "@emotion/styled": "^11.14.0",
     "@mui/icons-material": "^6.4.7",
     "@mui/material": "^6.4.7",
+    "jsonp": "^0.2.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-material-ui-carousel": "^3.4.0",

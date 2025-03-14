@@ -3,6 +3,7 @@ body {
   align-items: flex-start;
   font-family: Arial, sans-serif;
   color: black; /* 修改默认字体颜色为黑色 */
+  /*background-image: url('/images/logo.jpg') ;*/
 }
 
 #root {
