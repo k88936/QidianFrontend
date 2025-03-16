@@ -74,7 +74,7 @@ function App() {
 
     return (
         <Router>
-            <AppBar position="static">
+            <AppBar position="fixed">
                 <Toolbar sx={{display: 'flex', justifyContent: 'space-between'}}>
                     <Typography variant="h6" component="div" sx={{flexGrow: 1}}>
                         启点
@@ -153,11 +153,13 @@ function App() {
                     </Box>
                 </Toolbar>
             </AppBar>
-            <Routes>
-                <Route path="/" element={<Home isMobile={isMobile} />}/>
-                <Route path="/search" element={<Search isMobile={isMobile} />}/>
-                {/* 其他路由可以在这里添加 */}
-            </Routes>
+            <Box sx={{ marginTop: '64px' }}>
+                <Routes>
+                    <Route path="/" element={<Home isMobile={isMobile} />}/>
+                    <Route path="/search" element={<Search isMobile={isMobile} />}/>
+                    {/* 其他路由可以在这里添加 */}
+                </Routes>
+            </Box>
         </Router>
     );
 }

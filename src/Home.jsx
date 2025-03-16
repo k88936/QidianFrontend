@@ -92,6 +92,8 @@ function Home(isMobile) {
                 <Paper elevation={3} sx={{
                     padding: '3vw', maxWidth: '80vw', margin: '0 auto', marginTop: '-15vh',
                     position: 'relative', zIndex: 1,
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)', // 设置背景颜色为半透明
+                    backdropFilter: 'blur(50px)', // 添加磨砂玻璃效果
                 }}>
                     <Box
                         component="form"
