@@ -293,7 +293,9 @@ function Search({isMobile}) { // 修改参数接收方式
                                     bottom: '1vh',       // 距离顶部20px
                                     left: '1vh',      // 距离左边20px
                                     zIndex: 1000,        // 确保按钮在其他内容之上
-                                    borderRadius: '50%'  // 设置按钮为圆形
+                                    // backdropFilter: 'blur(10px)', // 添加磨砂玻璃效果
+                                    backgroundColor: 'primary'
+                                    // backgroundColor: 'rgba(255, 255, 255, 0.5)' // 设置背景颜色为半透明白色
                                 }}>
                             筛选
                         </Button>
