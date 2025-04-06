@@ -1,4 +1,3 @@
-Something wrong happened, please give me more information or retry.```markdown
 # API 文档
 
 ## GET /search
@@ -19,7 +18,7 @@ Something wrong happened, please give me more information or retry.```markdown
 ### 示例
 ```
 
-GET /search?query=example&page=2 HTTP/1.1
+GET /search?query=example&page=2&filters={"nation":["美国","英国"]} HTTP/1.1
 Host: localhost:8080
 ```
 响应：

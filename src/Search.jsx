@@ -25,10 +25,22 @@ import HomeIcon from '@mui/icons-material/Home';
 import SchoolIcon from '@mui/icons-material/School';
 import Drawer from '@mui/material/Drawer'; // 引入 Drawer 组件
 import MenuIcon from '@mui/icons-material/Menu'; // 引入 MenuIcon 组件
+import Autocomplete from '@mui/material/Autocomplete';
 
 import './my_ip.js'
 import {my_ip} from "./my_ip.js";
 
+const countries = [
+    '英国',
+    '美国',
+    '德国',
+    '澳大利亚',
+    '新西兰',
+    '新加坡'
+];
+
+
+// 定义 FilterSidebar 组件，用于展示和操作筛选条件
 function FilterSidebar({
                            filters,
                            selectedFilters,
@@ -39,19 +51,45 @@ function FilterSidebar({
                        }) {
     return (
         <Box sx={{
-            width: isMobile ? '75vw' : '10vw', padding: '10px', paddingRight: '20px', borderRight: '1px solid #ccc'
+            width: isMobile ? '75vw' : '15vw', padding: '10px', paddingRight: '20px', borderRight: '1px solid #ccc'
         }}>
             <Typography variant="caption">筛选条件</Typography>
             <FormGroup>
-                <Typography variant="caption">地区</Typography>
-                <FormControlLabel disabled control={<Checkbox/>} label="北美"
-                                  onChange={() => handleFilterChange('universityType', [...filters.universityType, ''])}/>
-                <FormControlLabel disabled control={<Checkbox/>} label="欧洲"
-                                  onChange={() => handleFilterChange('universityType', [...filters.universityType, ''])}/>
-                {/*<FormControlLabel disabled control={<Checkbox/>} label=""*/}
-                {/*                  onChange={() => handleFilterChange('universityType', [...filters.universityType, ''])}/>*/}
-                {/*<FormControlLabel disabled control={<Checkbox/>} label=""*/}
-                {/*                  onChange={() => handleFilterChange('universityType', [...filters.universityType, ''])}/>*/}
+                <Typography variant="caption">国家和地区</Typography>
+                <Autocomplete
+                    multiple
+                    id="tags-standard"
+                    options={countries}
+                    value={filters.nation}
+                    onChange={(event, newValue) => {
+                        handleFilterChange('nation', newValue);
+                    }}
+                    filterOptions={(options, params) => {
+                        const inputValue = params.inputValue.toLowerCase();
+                        return options.filter(option => option.toLowerCase().includes(inputValue));
+                    }}
+                    renderInput={(params) => (
+                        <TextField
+                            {...params}
+                            variant="standard"
+                            placeholder="选择国家和地区"
+                        />
+                    )}
+                    renderTags={(value, getTagProps) =>
+                        value.map((option, index) => (
+                            <Chip
+                                variant="outlined"
+                                label={option}
+                                {...getTagProps({index})}
+                                onDelete={() => {
+                                    const newValues = filters.nation.filter(val => val !== option);
+                                    handleFilterChange('nation', newValues);
+                                }}
+                            />
+                        ))
+                    }
+                />
+
             </FormGroup>
             <Divider/>
             {/*<FormGroup>*/}
@@ -70,31 +108,31 @@ function FilterSidebar({
             {/*               onChange={(e) => handleFilterChange('researchField', [...filters.researchField, e.target.value])}/>*/}
             {/*</FormGroup>*/}
             {/*<Divider/>*/}
-            <FormGroup>
-                <Typography variant="caption">论文发表数量区间</Typography>
-                <Slider
-                    disabled
-                    value={filters.publicationRange}
-                    onChange={(e, newValue) => handleFilterChange('publicationRange', newValue)}
-                    valueLabelDisplay="auto"
-                    min={0}
-                    max={100}
-                    size="small"
-                />
-            </FormGroup>
-            <Divider/>
-            <FormGroup>
-                <Typography variant="caption">H-index指数区间</Typography>
-                <Slider
-                    disabled
-                    value={filters.hIndexRange}
-                    onChange={(e, newValue) => handleFilterChange('hIndexRange', newValue)}
-                    valueLabelDisplay="auto"
-                    min={0}
-                    max={50}
-                    size="small"
-                />
-            </FormGroup>
+            {/*<FormGroup>*/}
+            {/*    <Typography variant="caption">论文发表数量区间</Typography>*/}
+            {/*    <Slider*/}
+            {/*        disabled*/}
+            {/*        value={filters.publicationRange}*/}
+            {/*        onChange={(e, newValue) => handleFilterChange('publicationRange', newValue)}*/}
+            {/*        valueLabelDisplay="auto"*/}
+            {/*        min={0}*/}
+            {/*        max={100}*/}
+            {/*        size="small"*/}
+            {/*    />*/}
+            {/*</FormGroup>*/}
+            {/*<Divider/>*/}
+            {/*<FormGroup>*/}
+            {/*    <Typography variant="caption">H-index指数区间</Typography>*/}
+            {/*    <Slider*/}
+            {/*        disabled*/}
+            {/*        value={filters.hIndexRange}*/}
+            {/*        onChange={(e, newValue) => handleFilterChange('hIndexRange', newValue)}*/}
+            {/*        valueLabelDisplay="auto"*/}
+            {/*        min={0}*/}
+            {/*        max={50}*/}
+            {/*        size="small"*/}
+            {/*    />*/}
+            {/*</FormGroup>*/}
             <Divider/>
             <Box>
                 <Typography variant="caption">已选条件</Typography>
@@ -103,7 +141,7 @@ function FilterSidebar({
                 ))}
             </Box>
             <Divider/>
-            <Button disabled variant="contained" onClick={handleFilterButtonClick} color="primary" size="small"
+            <Button  variant="contained" onClick={handleFilterButtonClick} color="primary" size="small"
                     fullWidth>
                 筛选
             </Button>
@@ -111,7 +149,7 @@ function FilterSidebar({
     );
 }
 
-// 新增 TeacherCard 组件
+// 定义 TeacherCard 组件，用于展示单个导师的信息
 function TeacherCard({result}) {
     return (
         <Paper elevation={3} sx={{
@@ -132,13 +170,13 @@ function TeacherCard({result}) {
                 <Typography variant="h6" sx={{fontWeight: 'bold'}}>{result.teacher}</Typography>
             </Box>
 
-            <AutoDisappearTooltip title="如果网页空白,是因为受到了跨域访问限制,请点击下方主页按钮在浏览器访问">
-                <iframe
-                    src={result['page']}
-                    title="Website Preview"
-                    style={{width: '100%', height: '500px', border: 'none', marginTop: '10px'}}
-                />
-            </AutoDisappearTooltip>
+            {/*<AutoDisappearTooltip title="如果网页空白,是因为受到了跨域访问限制,请点击下方主页按钮在浏览器访问">*/}
+            {/*    <iframe*/}
+            {/*        src={result['page']}*/}
+            {/*        title="Website Preview"*/}
+            {/*        style={{width: '100%', height: '500px', border: 'none', marginTop: '10px'}}*/}
+            {/*    />*/}
+            {/*</AutoDisappearTooltip>*/}
             <Box sx={{
                 display: 'flex', flexWrap: 'wrap', gap: '5px', marginTop: '5px', justifyContent: 'center'
             }}>
@@ -160,7 +198,7 @@ function TeacherCard({result}) {
                         </IconButton>
                     </AutoDisappearTooltip>
                     <AutoDisappearTooltip title="访问该导师的主页">
-                        <IconButton href={result['page']} disabled={!result['page'].includes('http')}
+                        <IconButton href={result['page']} disabled={!result['page'] ||!result['page'].includes('http')}
                                     aria-label="homepage">
                             <HomeIcon/>
                         </IconButton>
@@ -172,6 +210,13 @@ function TeacherCard({result}) {
                             <SchoolIcon/>
                         </IconButton>
                     </AutoDisappearTooltip>
+                    <AutoDisappearTooltip title="在 Google Scholar 上搜索该导师">
+                        <IconButton
+                            href={`https://scholar.google.com/scholar?hl=zh-CN&as_sdt=0%2C5&q=${encodeURIComponent(result['school'] + ' ' + result['department'] + ' ' + result['teacher'])}&btnG=`}
+                            target="_blank" aria-label="google scholar">
+                            <SchoolIcon/>
+                        </IconButton>
+                    </AutoDisappearTooltip>
                 </Box>
             </Box>
 
@@ -179,7 +224,7 @@ function TeacherCard({result}) {
     );
 }
 
-// 新增 AutoDisappearTooltip 组件
+// 定义 AutoDisappearTooltip 组件，用于显示自动消失的提示信息
 function AutoDisappearTooltip({title, children, disappearTime = 4000}) {
     const [open, setOpen] = useState(false);
 
@@ -204,24 +249,37 @@ function AutoDisappearTooltip({title, children, disappearTime = 4000}) {
     );
 }
 
-function Search({isMobile}) { // 修改参数接收方式
+// 定义 formatFilters 函数，用于将筛选条件格式化为可读的字符串
+function formatFilters(filters) {
+    const formattedFilters = [];
+    if (filters.nation && filters.nation.length > 0) {
+        formattedFilters.push(`国家和地区: ${filters.nation.join(', ')}`);
+    }
+    // 可以根据需要添加其他过滤条件的格式化逻辑
+    return formattedFilters.join('; ');
+}
+
+// 定义 Search 组件，用于处理搜索逻辑和展示搜索结果
+function Search({isMobile}) {
     const [searchParams] = useSearchParams();
     const query = searchParams.get('query') || '';
     const [searchResults, setSearchResults] = useState([]);
     const [totalResults, setTotalResults] = useState(0);
     const [currentPage, setCurrentPage] = useState(1);
     const [filters, setFilters] = useState({
-        universityType: [], title: [], researchField: [], publicationRange: [0, 100], hIndexRange: [0, 50]
+        nation: [],
+        // title: [], researchField: [], publicationRange: [0, 100], hIndexRange: [0, 50]
     });
     const [selectedFilters, setSelectedFilters] = useState([]);
     const [shouldFetch, setShouldFetch] = useState(true);
-    const [isLoading, setIsLoading] = useState(false); // 新增 isLoading 状态
-    const [isDrawerOpen, setIsDrawerOpen] = useState(false); // 新增 isDrawerOpen 状态
+    const [isLoading, setIsLoading] = useState(false);
+    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
+    // 使用 useEffect 钩子来触发搜索请求
     useEffect(() => {
         if (!shouldFetch) return;
 
-        setIsLoading(true); // 设置 isLoading 为 true
+        setIsLoading(true);
         console.log(`Searching for: ${query}`);
         console.log(encodeURIComponent(query))
         fetch(`http://${my_ip}/search?query=${encodeURIComponent(query)}&page=${currentPage}&filters=${JSON.stringify(filters)}`)
@@ -230,24 +288,29 @@ function Search({isMobile}) { // 修改参数接收方式
                 setSearchResults(data['docs']);
                 setTotalResults(data['count']);
                 console.log(data['docs'])
+                console.log(data['docs'].length)
             })
             .catch(error => {
                 console.error('Error fetching Search results:', error);
             })
             .finally(() => {
                 setShouldFetch(false);
-                setIsLoading(false); // 设置 isLoading 为 false
+                setIsLoading(false);
             });
     }, [query, filters, shouldFetch, currentPage]);
 
+    // 处理分页变化
     const handlePageChange = (event, value) => {
         setCurrentPage(value);
+        console.log(`Page changed to ${value}`)
     };
 
+    // 滚动到页面顶部
     const scrollToTop = () => {
         window.scrollTo({top: 0, behavior: 'smooth'});
     };
 
+    // 处理筛选条件变化
     const handleFilterChange = (filterType, value) => {
         setFilters(prevFilters => ({
             ...prevFilters, [filterType]: value
@@ -257,6 +320,7 @@ function Search({isMobile}) { // 修改参数接收方式
         }
     };
 
+    // 移除筛选条件
     const handleRemoveFilter = (filterType) => {
         setFilters(prevFilters => ({
             ...prevFilters,
@@ -265,6 +329,7 @@ function Search({isMobile}) { // 修改参数接收方式
         setSelectedFilters(selectedFilters.filter(type => type !== filterType));
     };
 
+    // 处理筛选按钮点击事件
     const handleFilterButtonClick = () => {
         setShouldFetch(true);
         if (isMobile) {
@@ -272,6 +337,7 @@ function Search({isMobile}) { // 修改参数接收方式
         }
     };
 
+    // 切换抽屉的打开和关闭状态
     const toggleDrawer = (open) => (event) => {
         if (event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
             return;
@@ -281,21 +347,18 @@ function Search({isMobile}) { // 修改参数接收方式
 
     return (
         <div>
-
             <Box sx={{display: 'flex', flexDirection: 'row', padding: '20px'}}>
                 {isMobile ? (
                     <>
                         <Button variant="contained" color="primary" onClick={toggleDrawer(true)}
                                 sx={{
-                                    position: 'fixed', // 设置按钮为固定定位
-                                    height:'6vh',
-                                    width:'6vh',
-                                    bottom: '1vh',       // 距离顶部20px
-                                    left: '1vh',      // 距离左边20px
-                                    zIndex: 1000,        // 确保按钮在其他内容之上
-                                    // backdropFilter: 'blur(10px)', // 添加磨砂玻璃效果
+                                    position: 'fixed',
+                                    height: '6vh',
+                                    width: '6vh',
+                                    bottom: '1vh',
+                                    left: '1vh',
+                                    zIndex: 1000,
                                     backgroundColor: 'primary'
-                                    // backgroundColor: 'rgba(255, 255, 255, 0.5)' // 设置背景颜色为半透明白色
                                 }}>
                             筛选
                         </Button>
@@ -306,7 +369,7 @@ function Search({isMobile}) { // 修改参数接收方式
                                 handleFilterChange={handleFilterChange}
                                 handleRemoveFilter={handleRemoveFilter}
                                 handleFilterButtonClick={handleFilterButtonClick}
-                                isMobile={isMobile} // 传递 isMobile 属性
+                                isMobile={isMobile}
                             />
                         </Drawer>
                     </>
@@ -317,7 +380,7 @@ function Search({isMobile}) { // 修改参数接收方式
                         handleFilterChange={handleFilterChange}
                         handleRemoveFilter={handleRemoveFilter}
                         handleFilterButtonClick={handleFilterButtonClick}
-                        isMobile={isMobile} // 传递 isMobile 属性
+                        isMobile={isMobile}
                     />
                 )}
                 <Box sx={{
@@ -329,13 +392,13 @@ function Search({isMobile}) { // 修改参数接收方式
                     gap: '20px'
                 }}>
                     <Box sx={{padding: '20px', backgroundColor: '#f0f0f0'}}>
-                        {isLoading ? ( // 根据 isLoading 状态显示不同的内容
+                        {isLoading ? (
                             <Typography variant="h6">
                                 正在搜索中...
                             </Typography>
                         ) : (
                             <Typography variant="h6">
-                                共找到 {totalResults} 位导师，条件：{query}
+                                共找到 {totalResults} 位导师(展示前一百位)，条件：{query}，筛选条件：{formatFilters(filters)}
                             </Typography>
                         )}
                     </Box>
