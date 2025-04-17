@@ -191,7 +191,7 @@ function TeacherCard({result}) {
                 <Typography variant="body2">{result['school']} - {result['department']}</Typography>
                 <Box sx={{display: 'flex', gap: '10px'}}>
                     <AutoDisappearTooltip title="发送邮件给该导师">
-                        <IconButton href={`mailto:${result['email']}`} disabled={!result['email'].includes('@')}
+                        <IconButton href={`mailto:${result['email']}`} disabled={!result['email']||!result['email'].includes('@')}
                                     target="_blank"
                                     aria-label="email">
                             <MailIcon/>
