@@ -2,6 +2,8 @@ import React, {useEffect} from 'react'; // 添加useEffect导入
 import {BrowserRouter as Router, Route, Routes, Link} from 'react-router-dom';
 import Home from './Home.jsx';
 import Search from './Search.jsx'; // 引入搜索页面组件
+import JsonEditor from './JsonEditor.jsx';
+
 // 引入MUI组件
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';

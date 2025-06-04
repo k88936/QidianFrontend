@@ -27,8 +27,7 @@ import Drawer from '@mui/material/Drawer'; // 引入 Drawer 组件
 import MenuIcon from '@mui/icons-material/Menu'; // 引入 MenuIcon 组件
 import Autocomplete from '@mui/material/Autocomplete';
 
-import './my_ip.js'
-import {my_ip} from "./my_ip.js";
+import {backend_addr} from "./backend.js";
 
 const countries = [
     '英国',
@@ -282,7 +281,7 @@ function Search({isMobile}) {
         setIsLoading(true);
         console.log(`Searching for: ${query}`);
         console.log(encodeURIComponent(query))
-        fetch(`http://${my_ip}/search?query=${encodeURIComponent(query)}&page=${currentPage}&filters=${JSON.stringify(filters)}`)
+        fetch(`${backend_addr}/search?query=${encodeURIComponent(query)}&page=${currentPage}&filters=${JSON.stringify(filters)}`)
             .then(response => response.json())
             .then(data => {
                 setSearchResults(data['docs']);
