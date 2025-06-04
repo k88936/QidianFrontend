@@ -1,16 +1,11 @@
-import React, { useState } from 'react';
-import { Container, Typography, TextField, Button } from '@mui/material';
-import { JsonEditor } from 'json-edit-react';
+import React, {useState} from 'react';
+import {Button, Container} from '@mui/material';
+import {JsonEditor} from 'json-edit-react';
 import Box from "@mui/material/Box";
 import {backend_addr} from "./backend.js";
 
 const JsonEditorPage = () => {
-    const [json, setJson] = useState({
-        name: "John Doe",
-        age: 30,
-        isStudent: false,
-        hobbies: ["reading", "sports"]
-    });
+    const [json, setJson] = useState({});
     const pullData = async () => {
         try {
             const response = await fetch(`${backend_addr}/edit?operation=pull`);
@@ -23,7 +18,7 @@ const JsonEditorPage = () => {
                 return;
             }
             const result = await response.json();
-            console.log('Pulled data:', );
+            console.log('Pulled data:',);
             if (result.message) {
                 // 如果后端返回消息（如 "No more unfixed items"），提示用户
                 alert(result.message);
@@ -43,19 +38,13 @@ const JsonEditorPage = () => {
     const stashData = async () => {
         try {
             // 验证 JSON 数据格式是否正确
-            const jsonData = { data: json };
-            if (!jsonData || typeof jsonData !== 'object') {
-                console.error('Invalid JSON data format:', jsonData);
-                alert('Invalid JSON data format. Please check your input.');
-                return;
-            }
-
+            console.log('json: ', json)
             const response = await fetch(`${backend_addr}/edit?operation=stash`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(jsonData),
+                body: JSON.stringify({data: json}),
             });
 
             // 检查响应状态码
@@ -81,8 +70,9 @@ const JsonEditorPage = () => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ data: json }),
+                body: JSON.stringify({data: json}),
             });
+            console.log('json: ', json)
             const result = await response.json();
             console.log('Pushed data:', result);
         } catch (error) {
@@ -92,20 +82,24 @@ const JsonEditorPage = () => {
 
     return (
         <Container>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem' }}>
+            <Box sx={{display: 'flex', justifyContent: 'space-between', marginBottom: '2rem'}}>
                 <Button variant="contained" color="primary" onClick={pullData}>
                     Pull Data
                 </Button>
                 <Button variant="contained" color="secondary" onClick={stashData}>
                     Stash Data
                 </Button>
-                <Button variant="contained" color="success" onClick={pushData}>
+                <Button variant="contained" color="success" onClick={()=>{pushData().then(() => pullData());}}>
                     Push Data
                 </Button>
             </Box>
             <JsonEditor
                 data={json}
                 setData={setJson}
+                // onEditEvent={(path, isKey) => {
+                //     console.log(path);
+                //     console.log(isKey);
+                // }}
                 mode="tree"
                 search={true}
                 name="JSONEditor"

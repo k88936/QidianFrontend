@@ -22,7 +22,8 @@ import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
 import MenuIcon from '@mui/icons-material/Menu';
-import {useState} from 'react'; // 添加useState导入
+import {useState} from 'react';
+import JsonEditorPage from "./JsonEditor.jsx"; // 添加useState导入
 
 function App() {
     // const [anchorEl, setAnchorEl] = useState(null);
@@ -155,10 +156,11 @@ function App() {
                     </Box>
                 </Toolbar>
             </AppBar>
-            <Box sx={{ marginTop: '64px' }}>
+            <Box sx={{marginTop: '64px'}}>
                 <Routes>
-                    <Route path="/" element={<Home isMobile={isMobile} />}/>
-                    <Route path="/search" element={<Search isMobile={isMobile} />}/>
+                    <Route path="/" element={<Home isMobile={isMobile}/>}/>
+                    <Route path="/search" element={<Search isMobile={isMobile}/>}/>
+                    <Route path="/edit" element={<JsonEditorPage/>}/>
                     {/* 其他路由可以在这里添加 */}
                 </Routes>
             </Box>
