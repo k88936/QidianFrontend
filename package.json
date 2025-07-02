@@ -19,8 +19,12 @@
     "jsonp": "^0.2.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-markdown": "^10.1.0",
     "react-material-ui-carousel": "^3.4.0",
     "react-router-dom": "^7.3.0",
+    "react-type-animation": "^3.2.0",
+    "rehype-sanitize": "^6.0.0",
+    "remark-gfm": "^4.0.1",
     "serve": "^14.2.4"
   },
   "devDependencies": {
@@ -32,6 +36,6 @@
     "eslint-plugin-react-hooks": "^5.1.0",
     "eslint-plugin-react-refresh": "^0.4.19",
     "globals": "^15.15.0",
-    "vite": "^6.2.0"
+    "vite": "6.3.4"
   }
 }

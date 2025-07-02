@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, } from 'react';
 import {
     // useNavigate,
     useSearchParams
@@ -19,6 +19,10 @@ import {
     Divider,
     Tooltip // 引入 Tooltip 组件
 } from '@mui/material';
+import { TypeAnimation } from 'react-type-animation';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeSanitize from 'rehype-sanitize';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import MailIcon from '@mui/icons-material/Mail';
 import HomeIcon from '@mui/icons-material/Home';
@@ -54,7 +58,7 @@ function FilterSidebar({
         }}>
             <Typography variant="caption">筛选条件</Typography>
             <FormGroup>
-                <Typography variant="caption">国家和地区</Typography>
+                <Typography variant="caption">国家-地区-院校</Typography>
                 <Autocomplete
                     multiple
                     id="tags-standard"
@@ -71,7 +75,7 @@ function FilterSidebar({
                         <TextField
                             {...params}
                             variant="standard"
-                            placeholder="选择国家和地区"
+                            placeholder="选择国家-地区-院校"
                         />
                     )}
                     renderTags={(value, getTagProps) =>
@@ -140,7 +144,7 @@ function FilterSidebar({
                 ))}
             </Box>
             <Divider/>
-            <Button  variant="contained" onClick={handleFilterButtonClick} color="primary" size="small"
+            <Button variant="contained" onClick={handleFilterButtonClick} color="primary" size="small"
                     fullWidth>
                 筛选
             </Button>
@@ -150,6 +154,7 @@ function FilterSidebar({
 
 // 定义 TeacherCard 组件，用于展示单个导师的信息
 function TeacherCard({result}) {
+
     return (
         <Paper elevation={3} sx={{
             padding: '10px',
@@ -169,13 +174,45 @@ function TeacherCard({result}) {
                 <Typography variant="h6" sx={{fontWeight: 'bold'}}>{result.teacher}</Typography>
             </Box>
 
-            {/*<AutoDisappearTooltip title="如果网页空白,是因为受到了跨域访问限制,请点击下方主页按钮在浏览器访问">*/}
-            {/*    <iframe*/}
-            {/*        src={result['page']}*/}
-            {/*        title="Website Preview"*/}
-            {/*        style={{width: '100%', height: '500px', border: 'none', marginTop: '10px'}}*/}
-            {/*    />*/}
-            {/*</AutoDisappearTooltip>*/}
+
+            <Box sx={{display: 'flex', gap: '10px', marginTop: '10px'}}>
+                <Box sx={{flex: 3, position: 'relative'}}>
+                    <AutoDisappearTooltip title="如果网页空白,是因为受到了跨域访问限制,请点击下方主页按钮在浏览器访问">
+                        <iframe
+                            src={result['page']}
+                            title="Website Preview"
+                            style={{width: '100%', height: '500px', border: 'none', marginTop: '10px'}}
+                        />
+                    </AutoDisappearTooltip>
+                </Box>
+                <Box sx={{flex: 7}}>
+                    <Typography variant="h6" sx={{marginBottom: '10px', fontWeight: 'bold'}}>
+                        AI总结--导师简介
+                    </Typography>
+                    <Paper
+                        elevation={1}
+                        sx={{
+                            padding: '15px',
+                            height: '470px',
+                            overflow: 'auto',
+                            backgroundColor: '#f9f9f9'
+                        }}
+                    >
+                        <div style={{
+                            height: '100%',
+                            overflow: 'auto',
+                            color: '#333',
+                            fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif'
+                        }}>
+                            <MarkdownTypewriter 
+                                content={result['introduction'] || '暂无导师简介信息'} 
+                                speed={30}
+                            />
+                        </div>
+                    </Paper>
+                </Box>
+            </Box>
+
             <Box sx={{
                 display: 'flex', flexWrap: 'wrap', gap: '5px', marginTop: '5px', justifyContent: 'center'
             }}>
@@ -190,14 +227,15 @@ function TeacherCard({result}) {
                 <Typography variant="body2">{result['school']} - {result['department']}</Typography>
                 <Box sx={{display: 'flex', gap: '10px'}}>
                     <AutoDisappearTooltip title="发送邮件给该导师">
-                        <IconButton href={`mailto:${result['email']}`} disabled={!result['email']||!result['email'].includes('@')}
+                        <IconButton href={`mailto:${result['email']}`}
+                                    disabled={!result['email'] || !result['email'].includes('@')}
                                     target="_blank"
                                     aria-label="email">
                             <MailIcon/>
                         </IconButton>
                     </AutoDisappearTooltip>
                     <AutoDisappearTooltip title="访问该导师的主页">
-                        <IconButton href={result['page']} disabled={!result['page'] ||!result['page'].includes('http')}
+                        <IconButton href={result['page']} disabled={!result['page'] || !result['page'].includes('http')}
                                     aria-label="homepage">
                             <HomeIcon/>
                         </IconButton>
@@ -220,6 +258,59 @@ function TeacherCard({result}) {
             </Box>
 
         </Paper>
+    );
+}
+
+// 定义 MarkdownTypewriter 组件，用于打字机效果显示 Markdown 内容
+function MarkdownTypewriter({ content, speed = 50 }) {
+    const [displayedContent, setDisplayedContent] = useState('');
+    const [isTypingComplete, setIsTypingComplete] = useState(false);
+
+    useEffect(() => {
+        let currentIndex = 0;
+        setDisplayedContent('');
+        setIsTypingComplete(false);
+
+        const interval = setInterval(() => {
+            if (currentIndex < content.length) {
+                setDisplayedContent(prev => prev + content[currentIndex]);
+                currentIndex++;
+            } else {
+                clearInterval(interval);
+                setIsTypingComplete(true);
+            }
+        }, speed);
+
+        return () => clearInterval(interval);
+    }, [content, speed]);
+
+    // Define custom components with styling
+    const components = {
+        p: ({node, ...props}) => <p style={{fontSize: '1.25rem', lineHeight: 1.8}} {...props} />,
+        h1: ({node, ...props}) => <h1 style={{fontSize: '2em', marginTop: '1.5rem', marginBottom: '1rem'}} {...props} />,
+        h2: ({node, ...props}) => <h2 style={{fontSize: '1.5em', marginTop: '1.5rem', marginBottom: '1rem'}} {...props} />,
+        h3: ({node, ...props}) => <h3 style={{fontSize: '1.25em', marginTop: '1.5rem', marginBottom: '1rem'}} {...props} />,
+        a: ({node, ...props}) => <a style={{color: '#0366d6', textDecoration: 'none'}} {...props} />,
+        ul: ({node, ...props}) => <ul style={{paddingLeft: '2em'}} {...props} />,
+        ol: ({node, ...props}) => <ol style={{paddingLeft: '2em'}} {...props} />,
+        blockquote: ({node, ...props}) => <blockquote style={{padding: '0 1em', color: '#6a737d', borderLeft: '0.25em solid #dfe2e5'}} {...props} />,
+        code: ({node, ...props}) => <code style={{padding: '0.2em 0.4em', margin: 0, fontSize: '85%', backgroundColor: 'rgba(27, 31, 35, 0.05)', borderRadius: '3px'}} {...props} />
+    };
+
+    return (
+        <div style={{ fontSize: '1.25rem' }}>
+            {!isTypingComplete ? (
+                <div style={{ whiteSpace: 'pre-wrap', lineHeight: 1.8 }}>{displayedContent}</div>
+            ) : (
+                <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    rehypePlugins={[rehypeSanitize]}
+                    components={components}
+                >
+                    {content}
+                </ReactMarkdown>
+            )}
+        </div>
     );
 }
 
