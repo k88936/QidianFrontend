@@ -1,4 +1,4 @@
-import React, {useState, useEffect, } from 'react';
+import React, {useState, useEffect,} from 'react';
 import {
     // useNavigate,
     useSearchParams
@@ -17,9 +17,17 @@ import {
     Slider,
     Chip,
     Divider,
-    Tooltip // 引入 Tooltip 组件
+    Tooltip, // 引入 Tooltip 组件
+    CircularProgress
 } from '@mui/material';
-import { TypeAnimation } from 'react-type-animation';
+import {TreeView, TreeItem} from '@mui/x-tree-view';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import CheckBoxIcon from '@mui/icons-material/CheckBox';
+import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
+import IndeterminateCheckBoxIcon from '@mui/icons-material/IndeterminateCheckBox';
+
+import {TypeAnimation} from 'react-type-animation';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeSanitize from 'rehype-sanitize';
@@ -33,14 +41,98 @@ import Autocomplete from '@mui/material/Autocomplete';
 
 import {backend_addr} from "./backend.js";
 
-const countries = [
-    '英国',
-    '美国',
-    '德国',
-    '澳大利亚',
-    '新西兰',
-    '新加坡'
-];
+// Tree filter component for area/nation/school selection
+function TreeFilter({data, onFilterChange}) {
+    const [selected, setSelected] = useState([]);
+    const [expanded, setExpanded] = useState([]);
+
+    const handleToggle = (event, nodeIds) => {
+        setExpanded(nodeIds);
+    };
+
+    // Handle both selection and checkbox changes
+    const handleSelect = (event, nodeIds) => {
+        // Check if the event came from a checkbox click
+        setSelected(nodeIds);
+
+        // Parse selected items to determine filter categories
+        const areas = [];
+        const nations = [];
+        const schools = [];
+
+        nodeIds.forEach(nodeId => {
+            // Format: 'area:亚洲' or 'nation:中国' or 'school:清华大学'
+            const [type, value] = nodeId.split(':');
+            if (type === 'area') areas.push(value);
+            else if (type === 'nation') nations.push(value);
+            else if (type === 'school') schools.push(value);
+        });
+
+        // Call parent with filtered data
+        onFilterChange({
+            area: areas,
+            nation: nations,
+            school: schools
+        });
+    };
+
+    const renderTree = (nodes) => {
+        if (!nodes) return null;
+
+        return Object.entries(nodes).map(([key, value]) => {
+            // If value is an array, it's a list of schools
+            if (Array.isArray(value)) {
+                return (
+                    <TreeItem
+                        key={`nation:${key}`}
+                        nodeId={`nation:${key}`}
+                        label={key}
+                        sx={{marginLeft: 1}}
+                    >
+                        {value.map(school => (
+                            <TreeItem
+                                key={`school:${school}`}
+                                nodeId={`school:${school}`}
+                                label={school}
+                                sx={{marginLeft: 1}}
+                            />
+                        ))}
+                    </TreeItem>
+                );
+            }
+            // Otherwise it's an area with nations
+            else {
+                return (
+                    <TreeItem
+                        key={`area:${key}`}
+                        nodeId={`area:${key}`}
+                        label={key}
+                        sx={{'& > .MuiTreeItem-content': {fontWeight: 'bold'}}}
+                    >
+                        {renderTree(value)}
+                    </TreeItem>
+                );
+            }
+        });
+    };
+
+    return (
+        // 修改后
+        <TreeView
+            aria-label="地区筛选"
+            defaultCollapseIcon={<ExpandMoreIcon/>}
+            defaultExpandIcon={<ChevronRightIcon/>}
+            expanded={expanded}
+            selected={selected}
+            multiSelect
+            onNodeToggle={handleToggle}
+            onNodeSelect={handleSelect}
+            sx={{height: 400, flexGrow: 1, overflowY: 'auto'}}
+        >
+            {renderTree(data)}
+        </TreeView>
+    );
+}
 
 
 // 定义 FilterSidebar 组件，用于展示和操作筛选条件
@@ -50,49 +142,54 @@ function FilterSidebar({
                            handleFilterChange,
                            handleRemoveFilter,
                            handleFilterButtonClick,
-                           isMobile
+                           isMobile,
+                           treeData,
+                           isTreeLoading
                        }) {
+
+    // Handle tree filter changes
+    const handleTreeFilterChange = (treeFilters) => {
+        // Update all filter categories at once
+        if (treeFilters.area && treeFilters.area.length > 0) {
+            handleFilterChange('area', treeFilters.area);
+        } else if (filters.area && filters.area.length > 0) {
+            handleRemoveFilter('area');
+        }
+
+        if (treeFilters.nation && treeFilters.nation.length > 0) {
+            handleFilterChange('nation', treeFilters.nation);
+        } else if (filters.nation && filters.nation.length > 0) {
+            handleRemoveFilter('nation');
+        }
+
+        if (treeFilters.school && treeFilters.school.length > 0) {
+            handleFilterChange('school', treeFilters.school);
+        } else if (filters.school && filters.school.length > 0) {
+            handleRemoveFilter('school');
+        }
+    };
+
     return (
         <Box sx={{
             width: isMobile ? '75vw' : '15vw', padding: '10px', paddingRight: '20px', borderRight: '1px solid #ccc'
         }}>
             <Typography variant="caption">筛选条件</Typography>
             <FormGroup>
-                <Typography variant="caption">国家-地区-院校</Typography>
-                <Autocomplete
-                    multiple
-                    id="tags-standard"
-                    options={countries}
-                    value={filters.nation}
-                    onChange={(event, newValue) => {
-                        handleFilterChange('nation', newValue);
-                    }}
-                    filterOptions={(options, params) => {
-                        const inputValue = params.inputValue.toLowerCase();
-                        return options.filter(option => option.toLowerCase().includes(inputValue));
-                    }}
-                    renderInput={(params) => (
-                        <TextField
-                            {...params}
-                            variant="standard"
-                            placeholder="选择国家-地区-院校"
-                        />
-                    )}
-                    renderTags={(value, getTagProps) =>
-                        value.map((option, index) => (
-                            <Chip
-                                variant="outlined"
-                                label={option}
-                                {...getTagProps({index})}
-                                onDelete={() => {
-                                    const newValues = filters.nation.filter(val => val !== option);
-                                    handleFilterChange('nation', newValues);
-                                }}
-                            />
-                        ))
-                    }
-                />
-
+                <Typography variant="caption">地区-国家-院校</Typography>
+                {isTreeLoading ? (
+                    <Box sx={{display: 'flex', justifyContent: 'center', p: 2}}>
+                        <CircularProgress size={24}/>
+                    </Box>
+                ) : treeData ? (
+                    <TreeFilter
+                        data={treeData}
+                        onFilterChange={handleTreeFilterChange}
+                    />
+                ) : (
+                    <Typography variant="caption" color="error">
+                        无法加载筛选树，请稍后再试
+                    </Typography>
+                )}
             </FormGroup>
             <Divider/>
             {/*<FormGroup>*/}
@@ -178,11 +275,13 @@ function TeacherCard({result}) {
             <Box sx={{display: 'flex', gap: '10px', marginTop: '10px'}}>
                 <Box sx={{flex: 3, position: 'relative'}}>
                     <AutoDisappearTooltip title="如果网页空白,是因为受到了跨域访问限制,请点击下方主页按钮在浏览器访问">
-                        <iframe
-                            src={result['page']}
-                            title="Website Preview"
-                            style={{width: '100%', height: '500px', border: 'none', marginTop: '10px'}}
-                        />
+                        <Box>
+                            <iframe
+                                src={result['page']}
+                                aria-label="Website Preview"
+                                style={{width: '100%', height: '500px', border: 'none', marginTop: '10px'}}
+                            />
+                        </Box>
                     </AutoDisappearTooltip>
                 </Box>
                 <Box sx={{flex: 7}}>
@@ -204,8 +303,8 @@ function TeacherCard({result}) {
                             color: '#333',
                             fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif'
                         }}>
-                            <MarkdownTypewriter 
-                                content={result['introduction'] || '暂无导师简介信息'} 
+                            <MarkdownTypewriter
+                                content={result['introduction'] || '暂无导师简介信息'}
                                 speed={30}
                             />
                         </div>
@@ -262,7 +361,7 @@ function TeacherCard({result}) {
 }
 
 // 定义 MarkdownTypewriter 组件，用于打字机效果显示 Markdown 内容
-function MarkdownTypewriter({ content, speed = 50 }) {
+function MarkdownTypewriter({content, speed = 50}) {
     const [displayedContent, setDisplayedContent] = useState('');
     const [isTypingComplete, setIsTypingComplete] = useState(false);
 
@@ -286,21 +385,31 @@ function MarkdownTypewriter({ content, speed = 50 }) {
 
     // Define custom components with styling
     const components = {
-        p: ({node, ...props}) => <p style={{fontSize: '1.25rem', lineHeight: 1.8}} {...props} />,
-        h1: ({node, ...props}) => <h1 style={{fontSize: '2em', marginTop: '1.5rem', marginBottom: '1rem'}} {...props} />,
-        h2: ({node, ...props}) => <h2 style={{fontSize: '1.5em', marginTop: '1.5rem', marginBottom: '1rem'}} {...props} />,
-        h3: ({node, ...props}) => <h3 style={{fontSize: '1.25em', marginTop: '1.5rem', marginBottom: '1rem'}} {...props} />,
-        a: ({node, ...props}) => <a style={{color: '#0366d6', textDecoration: 'none'}} {...props} />,
-        ul: ({node, ...props}) => <ul style={{paddingLeft: '2em'}} {...props} />,
-        ol: ({node, ...props}) => <ol style={{paddingLeft: '2em'}} {...props} />,
-        blockquote: ({node, ...props}) => <blockquote style={{padding: '0 1em', color: '#6a737d', borderLeft: '0.25em solid #dfe2e5'}} {...props} />,
-        code: ({node, ...props}) => <code style={{padding: '0.2em 0.4em', margin: 0, fontSize: '85%', backgroundColor: 'rgba(27, 31, 35, 0.05)', borderRadius: '3px'}} {...props} />
+        p: ({...props}) => <p style={{fontSize: '1.25rem', lineHeight: 1.8}} {...props} />,
+        h1: ({...props}) => <h1
+            style={{fontSize: '2em', marginTop: '1.5rem', marginBottom: '1rem'}} {...props} />,
+        h2: ({...props}) => <h2
+            style={{fontSize: '1.5em', marginTop: '1.5rem', marginBottom: '1rem'}} {...props} />,
+        h3: ({...props}) => <h3
+            style={{fontSize: '1.25em', marginTop: '1.5rem', marginBottom: '1rem'}} {...props} />,
+        a: ({...props}) => <a style={{color: '#0366d6', textDecoration: 'none'}} {...props} />,
+        ul: ({...props}) => <ul style={{paddingLeft: '2em'}} {...props} />,
+        ol: ({...props}) => <ol style={{paddingLeft: '2em'}} {...props} />,
+        blockquote: ({...props}) => <blockquote
+            style={{padding: '0 1em', color: '#6a737d', borderLeft: '0.25em solid #dfe2e5'}} {...props} />,
+        code: ({...props}) => <code style={{
+            padding: '0.2em 0.4em',
+            margin: 0,
+            fontSize: '85%',
+            backgroundColor: 'rgba(27, 31, 35, 0.05)',
+            borderRadius: '3px'
+        }} {...props} />
     };
 
     return (
-        <div style={{ fontSize: '1.25rem' }}>
+        <div style={{fontSize: '1.25rem'}}>
             {!isTypingComplete ? (
-                <div style={{ whiteSpace: 'pre-wrap', lineHeight: 1.8 }}>{displayedContent}</div>
+                <div style={{whiteSpace: 'pre-wrap', lineHeight: 1.8}}>{displayedContent}</div>
             ) : (
                 <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
@@ -342,8 +451,14 @@ function AutoDisappearTooltip({title, children, disappearTime = 4000}) {
 // 定义 formatFilters 函数，用于将筛选条件格式化为可读的字符串
 function formatFilters(filters) {
     const formattedFilters = [];
+    if (filters.area && filters.area.length > 0) {
+        formattedFilters.push(`地区: ${filters.area.join(', ')}`);
+    }
     if (filters.nation && filters.nation.length > 0) {
         formattedFilters.push(`国家和地区: ${filters.nation.join(', ')}`);
+    }
+    if (filters.school && filters.school.length > 0) {
+        formattedFilters.push(`院校: ${filters.school.join(', ')}`);
     }
     // 可以根据需要添加其他过滤条件的格式化逻辑
     return formattedFilters.join('; ');
@@ -357,13 +472,34 @@ function Search({isMobile}) {
     const [totalResults, setTotalResults] = useState(0);
     const [currentPage, setCurrentPage] = useState(1);
     const [filters, setFilters] = useState({
+        area: [],
         nation: [],
+        school: []
         // title: [], researchField: [], publicationRange: [0, 100], hIndexRange: [0, 50]
     });
     const [selectedFilters, setSelectedFilters] = useState([]);
     const [shouldFetch, setShouldFetch] = useState(true);
     const [isLoading, setIsLoading] = useState(false);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+    const [treeData, setTreeData] = useState(null);
+    const [isTreeLoading, setIsTreeLoading] = useState(false);
+
+    // Fetch tree data for filtering
+    useEffect(() => {
+        setIsTreeLoading(true);
+        fetch(`${backend_addr}/tree`)
+            .then(response => response.json())
+            .then(data => {
+                setTreeData(data);
+            })
+            .catch(error => {
+                console.error('Error fetching tree data:', error);
+                setTreeData(null);
+            })
+            .finally(() => {
+                setIsTreeLoading(false);
+            });
+    }, []);
 
     // 使用 useEffect 钩子来触发搜索请求
     useEffect(() => {
@@ -410,7 +546,7 @@ function Search({isMobile}) {
         }
     };
 
-    // 移除筛选条件
+// 移除筛选条件
     const handleRemoveFilter = (filterType) => {
         setFilters(prevFilters => ({
             ...prevFilters,
@@ -419,7 +555,7 @@ function Search({isMobile}) {
         setSelectedFilters(selectedFilters.filter(type => type !== filterType));
     };
 
-    // 处理筛选按钮点击事件
+// 处理筛选按钮点击事件
     const handleFilterButtonClick = () => {
         setShouldFetch(true);
         if (isMobile) {
@@ -427,7 +563,7 @@ function Search({isMobile}) {
         }
     };
 
-    // 切换抽屉的打开和关闭状态
+// 切换抽屉的打开和关闭状态
     const toggleDrawer = (open) => (event) => {
         if (event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
             return;
@@ -460,6 +596,8 @@ function Search({isMobile}) {
                                 handleRemoveFilter={handleRemoveFilter}
                                 handleFilterButtonClick={handleFilterButtonClick}
                                 isMobile={isMobile}
+                                treeData={treeData}
+                                isTreeLoading={isTreeLoading}
                             />
                         </Drawer>
                     </>
@@ -471,6 +609,8 @@ function Search({isMobile}) {
                         handleRemoveFilter={handleRemoveFilter}
                         handleFilterButtonClick={handleFilterButtonClick}
                         isMobile={isMobile}
+                        treeData={treeData}
+                        isTreeLoading={isTreeLoading}
                     />
                 )}
                 <Box sx={{
