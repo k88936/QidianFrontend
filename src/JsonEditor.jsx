@@ -54,6 +54,7 @@ const JsonEditorPage = () => {
                 alert(`Failed to stash data: ${errorData || 'Unknown error'}`);
                 return;
             }
+            alert('Data stashed successfully.')
 
             const result = await response.json();
             console.log('Stashed data:', result);
@@ -62,21 +63,37 @@ const JsonEditorPage = () => {
             alert('An unexpected error occurred while stashing data.');
         }
     };
-
     const pushData = async () => {
-        try {
-            const response = await fetch(`${backend_addr}/edit?operation=push`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({data: json}),
-            });
-            console.log('json: ', json)
-            const result = await response.json();
-            console.log('Pushed data:', result);
-        } catch (error) {
-            console.error('Error pushing data:', error);
+        const maxRetries = 3;
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                const response = await fetch(`${backend_addr}/edit?operation=push`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({data: json}),
+                });
+                
+                console.log('json: ', json);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                console.log('Pushed data:', result);
+                alert('Data pushed successfully.');
+                return; // Success, exit the function
+            } catch (error) {
+                console.error(`Attempt ${attempt} - Error pushing data:`, error);
+                
+                if (attempt < maxRetries) {
+                    console.log(`Retrying in ${attempt * 1000}ms...`);
+                    await new Promise(resolve => setTimeout(resolve, attempt * 1000)); // Exponential backoff
+                } else {
+                    alert(`Failed to push data after ${maxRetries} attempts: ${error.message} copy these below and save to file to save your work:     ${JSON.stringify(json)}`);
+                }
+            }
         }
     };
 
