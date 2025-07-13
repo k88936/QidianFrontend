@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {Button, Container} from '@mui/material';
 import {JsonEditor} from 'json-edit-react';
 import Box from "@mui/material/Box";
@@ -6,6 +6,32 @@ import {backend_addr} from "./backend.js";
 
 const JsonEditorPage = () => {
     const [json, setJson] = useState({});
+    const [count, setCount] = useState(0); // 新增状态变量
+
+    const countData = async () => {
+        try {
+            const response = await fetch(`${backend_addr}/edit?operation=count`);
+            console.log('Response:', response)
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error('Error pulling data:', errorData.error || 'Unknown error');
+                alert('Failed to pull data: ' + (errorData.error || 'Unknown error'));
+                return;
+            }
+            const result = await response.json();
+            console.log('Counted data:', result);
+            const count = result.count;
+            setCount(count); // 更新 count 状态
+        } catch (e) {
+            console.error('Error counting data:', e);
+            alert('An unexpected error occurred while counting data.');
+        }
+    };
+
+    useEffect(() => {
+        countData(); // 页面加载时初始化 count 数据
+    }, []);
+
     const pullData = async () => {
         try {
             const response = await fetch(`${backend_addr}/edit?operation=pull`);
@@ -25,6 +51,7 @@ const JsonEditorPage = () => {
             } else if (result.data) {
                 // 如果后端返回有效数据，更新状态
                 setJson(result.data);
+                await countData(); // 拉取成功后刷新 count
             } else {
                 // 如果后端返回的数据结构不符合预期，提示用户
                 alert('Invalid data format received from the server.');
@@ -63,6 +90,7 @@ const JsonEditorPage = () => {
             alert('An unexpected error occurred while stashing data.');
         }
     };
+
     const pushData = async () => {
         const maxRetries = 3;
         for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -83,6 +111,7 @@ const JsonEditorPage = () => {
                 const result = await response.json();
                 console.log('Pushed data:', result);
                 alert('Data pushed successfully.');
+                await countData(); // 推送成功后刷新 count
                 return; // Success, exit the function
             } catch (error) {
                 console.error(`Attempt ${attempt} - Error pushing data:`, error);
@@ -97,9 +126,13 @@ const JsonEditorPage = () => {
         }
     };
 
-    return (
-        <Container>
-            <Box sx={{display: 'flex', justifyContent: 'space-between', marginBottom: '2rem'}}>
+return (
+    <Container>
+        {/* 显示当前 Count 值 */}
+        <Box sx={{ marginBottom: '1rem', fontWeight: 'bold' }}>
+            Count: {count}
+        </Box>
+        <Box sx={{display: 'flex', justifyContent: 'space-between', marginBottom: '2rem'}}>
                 <Button variant="contained" color="primary" onClick={pullData}>
                     Pull Data
                 </Button>
@@ -127,7 +160,7 @@ const JsonEditorPage = () => {
                 }}
             />
         </Container>
-    );
+);
 };
 
 export default JsonEditorPage;
