@@ -6,16 +6,16 @@ import {
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import {backend_addr} from "./backend.js";
-import {Box, Typography, Paper, TextField, IconButton} from '@mui/material'; // 添加IconButton导入
-import {useNavigate} from 'react-router-dom'; // 新增导入
+import {Box, Typography, Paper, TextField} from '@mui/material';
+import {useNavigate} from 'react-router-dom';
 
 function Lib() {
     const [treeData, setTreeData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [expanded, setExpanded] = useState([]);
     const [selected, setSelected] = useState([]);
-    const [searchTerm, setSearchTerm] = useState(''); 
-    const navigate = useNavigate(); // 新增导航钩子
+    const [searchTerm, setSearchTerm] = useState('');
+    const navigate = useNavigate();
 
     const handleToggle = (event, nodeIds) => {
         setExpanded(nodeIds);
@@ -23,8 +23,7 @@ function Lib() {
 
     const handleSelect = (event, nodeIds) => {
         setSelected(nodeIds);
-        
-        // 新增：当点击学校节点时跳转到搜索页
+
         if (nodeIds.length > 0) {
             const nodeId = nodeIds[0];
             if (nodeId.startsWith('school:')) {
@@ -34,11 +33,32 @@ function Lib() {
         }
     };
 
-    const renderTree = (nodes) => {
+    const renderTree = (nodes, level = 0) => {
         if (!nodes) return null;
 
         return Object.entries(nodes).map(([key, value]) => {
-            // 如果值是数组，则为学校列表
+            // 如果是学校节点（值是数组且数组元素包含 name 和 count）
+            if (Array.isArray(value) && value.every(item => item.name && item.count !== undefined)) {
+                return (
+                    <TreeItem
+                        key={`school:${key}`}
+                        nodeId={`school:${key}`}
+                        label={key}
+                        sx={{marginLeft: 1}}
+                    >
+                        {value.map(college => (
+                            <TreeItem
+                                key={`college:${college.name}`}
+                                nodeId={`college:${college.name}`}
+                                label={`${college.name} (${college.count})`}
+                                sx={{marginLeft: 2}}
+                            />
+                        ))}
+                    </TreeItem>
+                );
+            }
+
+            // 如果是国家或地区节点（值是数组，即学校列表）
             if (Array.isArray(value)) {
                 return (
                     <TreeItem
@@ -58,23 +78,24 @@ function Lib() {
                     </TreeItem>
                 );
             }
-            // 否则它是包含国家的区域
-            else {
-                return (
-                    <TreeItem
-                        key={`area:${key}`}
-                        nodeId={`area:${key}`}
-                        label={key}
-                        sx={{'& > .MuiTreeItem-content': {fontWeight: 'bold'}}}
-                    >
-                        {renderTree(value)}
-                    </TreeItem>
-                );
-            }
+
+            // 如果是嵌套结构（比如区域 -> 国家 -> 学校）
+            return (
+                <TreeItem
+                    key={`area:${key}`}
+                    nodeId={`area:${key}`}
+                    label={key}
+                    sx={{
+                        '& > .MuiTreeItem-content': {fontWeight: 'bold'},
+                        marginLeft: level * 2
+                    }}
+                >
+                    {renderTree(value, level + 1)}
+                </TreeItem>
+            );
         });
     };
 
-    // 新增函数来过滤树数据
     const filterTreeData = (data, term) => {
         if (!term) return data;
 
@@ -95,6 +116,15 @@ function Lib() {
                             if (filteredSchools.length > 0) {
                                 filteredNations[nationKey] = filteredSchools;
                             }
+                        }
+                    } else if (Array.isArray(schools) || typeof schools === 'object') {
+                        const filteredSchools = Object.keys(schools).filter(school =>
+                            school.toLowerCase().includes(term.toLowerCase())
+                        );
+                        if (filteredSchools.length > 0) {
+                            const filtered = {};
+                            filteredSchools.forEach(s => filtered[s] = schools[s]);
+                            filteredNations[nationKey] = filtered;
                         }
                     }
                 });
@@ -124,9 +154,8 @@ function Lib() {
             <Typography variant="h5" gutterBottom>
                 地区 - 国家 - 院校树
             </Typography>
-            {/* 新增搜索输入区域 */}
             <TextField
-                label="搜索地区、国家或学校"
+                label="搜索地区、国家、学校或学院"
                 variant="outlined"
                 fullWidth
                 sx={{marginBottom: '20px'}}
@@ -139,8 +168,8 @@ function Lib() {
                 ) : treeData ? (
                     <TreeView
                         aria-label="地区筛选"
-                        defaultCollapseIcon={<ExpandMoreIcon/>}
-                        defaultExpandIcon={<ChevronRightIcon/>}
+                        defaultCollapseIcon={<ExpandMoreIcon />}
+                        defaultExpandIcon={<ChevronRightIcon />}
                         expanded={expanded}
                         selected={selected}
                         multiSelect
