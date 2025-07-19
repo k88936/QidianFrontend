@@ -6,14 +6,16 @@ import {
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import {backend_addr} from "./backend.js";
-import {Box, Typography, Paper, TextField} from '@mui/material'; // 添加TextField导入
+import {Box, Typography, Paper, TextField, IconButton} from '@mui/material'; // 添加IconButton导入
+import {useNavigate} from 'react-router-dom'; // 新增导入
 
 function Lib() {
     const [treeData, setTreeData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [expanded, setExpanded] = useState([]);
     const [selected, setSelected] = useState([]);
-    const [searchTerm, setSearchTerm] = useState(''); // 新增状态以存储搜索词
+    const [searchTerm, setSearchTerm] = useState(''); 
+    const navigate = useNavigate(); // 新增导航钩子
 
     const handleToggle = (event, nodeIds) => {
         setExpanded(nodeIds);
@@ -21,6 +23,15 @@ function Lib() {
 
     const handleSelect = (event, nodeIds) => {
         setSelected(nodeIds);
+        
+        // 新增：当点击学校节点时跳转到搜索页
+        if (nodeIds.length > 0) {
+            const nodeId = nodeIds[0];
+            if (nodeId.startsWith('school:')) {
+                const schoolName = nodeId.split(':')[1];
+                navigate(`/search?filters=${encodeURIComponent(JSON.stringify({school: [schoolName]}))}`);
+            }
+        }
     };
 
     const renderTree = (nodes) => {
