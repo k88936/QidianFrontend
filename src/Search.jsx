@@ -1,33 +1,22 @@
-import React, {useState, useEffect,} from 'react';
+import React, {useEffect, useState,} from 'react';
+import {useSearchParams} from 'react-router-dom';
 import {
-    // useNavigate,
-    useSearchParams
-} from 'react-router-dom';
-import {
-    TextField,
-    Button,
-    Paper,
-    Typography,
     Box,
-    Pagination,
-    IconButton,
-    Checkbox,
-    FormControlLabel,
-    FormGroup,
-    Slider,
+    Button,
     Chip,
+    CircularProgress,
     Divider,
-    Tooltip, // 引入 Tooltip 组件
-    CircularProgress
+    FormGroup,
+    IconButton,
+    Pagination,
+    Paper,
+    TextField,
+    Tooltip,
+    Typography
 } from '@mui/material';
-import {TreeView, TreeItem} from '@mui/x-tree-view';
+import {TreeItem, TreeView} from '@mui/x-tree-view';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import CheckBoxIcon from '@mui/icons-material/CheckBox';
-import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
-import IndeterminateCheckBoxIcon from '@mui/icons-material/IndeterminateCheckBox';
-
-import {TypeAnimation} from 'react-type-animation';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeSanitize from 'rehype-sanitize';
@@ -36,8 +25,6 @@ import MailIcon from '@mui/icons-material/Mail';
 import HomeIcon from '@mui/icons-material/Home';
 import SchoolIcon from '@mui/icons-material/School';
 import Drawer from '@mui/material/Drawer'; // 引入 Drawer 组件
-import MenuIcon from '@mui/icons-material/Menu'; // 引入 MenuIcon 组件
-import Autocomplete from '@mui/material/Autocomplete';
 
 import {backend_addr} from "./backend.js";
 
@@ -466,8 +453,7 @@ function formatFilters(filters) {
 
 // 定义 Search 组件，用于处理搜索逻辑和展示搜索结果
 function Search({isMobile}) {
-    const [searchParams] = useSearchParams();
-    const query = searchParams.get('query') || '';
+    const [searchParams,setSearchParams] = useSearchParams();
     const [searchResults, setSearchResults] = useState([]);
     const [totalResults, setTotalResults] = useState(0);
     const [currentPage, setCurrentPage] = useState(1);
@@ -506,9 +492,9 @@ function Search({isMobile}) {
         if (!shouldFetch) return;
 
         setIsLoading(true);
-        console.log(`Searching for: ${query}`);
-        console.log(encodeURIComponent(query))
-        fetch(`${backend_addr}/search?query=${encodeURIComponent(query)}&page=${currentPage}&filters=${JSON.stringify(filters)}`)
+        console.log(`Searching for: ${(searchParams.get('query') || '')}`);
+        console.log(encodeURIComponent(searchParams.get('query') || ''))
+        fetch(`${backend_addr}/search?query=${encodeURIComponent(searchParams.get('query') || '')}&page=${currentPage}&filters=${JSON.stringify(filters)}`)
             .then(response => response.json())
             .then(data => {
                 setSearchResults(data['docs']);
@@ -523,7 +509,7 @@ function Search({isMobile}) {
                 setShouldFetch(false);
                 setIsLoading(false);
             });
-    }, [query, filters, shouldFetch, currentPage]);
+    }, [filters, shouldFetch, currentPage, searchParams]);
 
     // 处理分页变化
     const handlePageChange = (event, value) => {
@@ -624,37 +610,36 @@ function Search({isMobile}) {
                 }}>
                     {/* 新增的搜索输入区域 */}
                     <Box sx={{width: '100%', padding: '10px', marginBottom: '20px'}}>
-                        <TextField
-                            fullWidth
-                            label="输入搜索关键词"
-                            variant="outlined"
-                            defaultValue={query}
-                            onChange={(e) => {
-                                const newQuery = e.target.value;
-                                // 更新搜索参数
-                                const newSearchParams = new URLSearchParams(searchParams);
-                                if (newQuery) {
-                                    newSearchParams.set('query', newQuery);
-                                } else {
-                                    newSearchParams.delete('query');
-                                }
-                                // 更新 URL 并触发搜索
-                                window.history.pushState(null, '', `?${newSearchParams.toString()}`);
-                            }}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <TextField
+                                fullWidth
+                                label="输入搜索关键词"
+                                variant="outlined"
+                                defaultValue={searchParams.get('query') || ''}
+                                onChange={(e) => {
                                     const newQuery = e.target.value;
+                                    // 更新搜索参数
                                     const newSearchParams = new URLSearchParams(searchParams);
                                     if (newQuery) {
                                         newSearchParams.set('query', newQuery);
                                     } else {
                                         newSearchParams.delete('query');
                                     }
+                                    // 更新 URL 并触发搜索
+                                    setSearchParams(newSearchParams)
+                                    setShouldFetch(true)
                                     window.history.pushState(null, '', `?${newSearchParams.toString()}`);
-                                    setShouldFetch(true);
-                                }
-                            }}
-                        />
+                                }}
+                            />
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                onClick={() => setShouldFetch(true)}
+                                sx={{ ml: 2, height: '55px' }}
+                            >
+                                搜索
+                            </Button>
+                        </Box>
                     </Box>
                     <Box sx={{padding: '20px', backgroundColor: '#f0f0f0'}}>
                         {isLoading ? (
@@ -663,7 +648,7 @@ function Search({isMobile}) {
                             </Typography>
                         ) : (
                             <Typography variant="h6">
-                                共找到 {totalResults} 位导师(展示前一百位)，条件：{query}，筛选条件：{formatFilters(filters)}
+                                共找到 {totalResults} 位导师(展示前一百位)，条件：{searchParams.get('query') || ''}，筛选条件：{formatFilters(filters)}
                             </Typography>
                         )}
                     </Box>
