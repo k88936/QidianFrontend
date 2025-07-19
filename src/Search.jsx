@@ -574,6 +574,7 @@ function Search({isMobile}) {
     return (
         <div>
             <Box sx={{display: 'flex', flexDirection: 'row', padding: '20px'}}>
+
                 {isMobile ? (
                     <>
                         <Button variant="contained" color="primary" onClick={toggleDrawer(true)}
@@ -621,6 +622,40 @@ function Search({isMobile}) {
                     flexWrap: 'nowrap',
                     gap: '20px'
                 }}>
+                    {/* 新增的搜索输入区域 */}
+                    <Box sx={{width: '100%', padding: '10px', marginBottom: '20px'}}>
+                        <TextField
+                            fullWidth
+                            label="输入搜索关键词"
+                            variant="outlined"
+                            defaultValue={query}
+                            onChange={(e) => {
+                                const newQuery = e.target.value;
+                                // 更新搜索参数
+                                const newSearchParams = new URLSearchParams(searchParams);
+                                if (newQuery) {
+                                    newSearchParams.set('query', newQuery);
+                                } else {
+                                    newSearchParams.delete('query');
+                                }
+                                // 更新 URL 并触发搜索
+                                window.history.pushState(null, '', `?${newSearchParams.toString()}`);
+                            }}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    const newQuery = e.target.value;
+                                    const newSearchParams = new URLSearchParams(searchParams);
+                                    if (newQuery) {
+                                        newSearchParams.set('query', newQuery);
+                                    } else {
+                                        newSearchParams.delete('query');
+                                    }
+                                    window.history.pushState(null, '', `?${newSearchParams.toString()}`);
+                                    setShouldFetch(true);
+                                }
+                            }}
+                        />
+                    </Box>
                     <Box sx={{padding: '20px', backgroundColor: '#f0f0f0'}}>
                         {isLoading ? (
                             <Typography variant="h6">

@@ -24,6 +24,7 @@ import ListItemText from '@mui/material/ListItemText';
 import MenuIcon from '@mui/icons-material/Menu';
 import {useState} from 'react';
 import JsonEditorPage from "./JsonEditor.jsx"; // 添加useState导入
+import Lib from './Lib.jsx'; // 新增导入 Lib 组件
 
 function App() {
     // const [anchorEl, setAnchorEl] = useState(null);
@@ -70,7 +71,7 @@ function App() {
 
     const menuItems = [
         {text: '首页', path: '/'},
-        {text: '院校库', path: '/schools', disabled: true},
+        {text: '院校库', path: '/lib', disabled: false},
         {text: '学科分类', path: '/subjects', disabled: true},
         {text: '帮助中心', path: '/help-center', disabled: true},
     ];
@@ -161,7 +162,7 @@ function App() {
                     <Route path="/" element={<Home isMobile={isMobile}/>}/>
                     <Route path="/search" element={<Search isMobile={isMobile}/>}/>
                     <Route path="/edit" element={<JsonEditorPage/>}/>
-                    {/* 其他路由可以在这里添加 */}
+                    <Route path="/lib" element={<Lib/>}/> {/* 新增路由 */}
                 </Routes>
             </Box>
         </Router>
