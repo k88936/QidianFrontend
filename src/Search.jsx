@@ -1,5 +1,5 @@
 import React, {useEffect, useState,} from 'react';
-import {useSearchParams} from 'react-router-dom';
+import {useSearchParams, useNavigate} from 'react-router-dom'; // 新增: 引入 useNavigate
 import {
     Box,
     Button,
@@ -24,7 +24,7 @@ import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import MailIcon from '@mui/icons-material/Mail';
 import HomeIcon from '@mui/icons-material/Home';
 import SchoolIcon from '@mui/icons-material/School';
-import Drawer from '@mui/material/Drawer'; // 引入 Drawer 组件
+import Drawer from '@mui/material/Drawer';
 
 import {backend_addr} from "./backend.js";
 
@@ -104,7 +104,6 @@ function TreeFilter({data, onFilterChange}) {
     };
 
     return (
-        // 修改后
         <TreeView
             aria-label="地区筛选"
             defaultCollapseIcon={<ExpandMoreIcon/>}
@@ -453,7 +452,9 @@ function formatFilters(filters) {
 
 // 定义 Search 组件，用于处理搜索逻辑和展示搜索结果
 function Search({isMobile}) {
-    const [searchParams,setSearchParams] = useSearchParams();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const navigate = useNavigate(); // 新增: 导入导航钩子
+
     const [searchResults, setSearchResults] = useState([]);
     const [totalResults, setTotalResults] = useState(0);
     const [currentPage, setCurrentPage] = useState(1);
@@ -461,7 +462,6 @@ function Search({isMobile}) {
         area: [],
         nation: [],
         school: []
-        // title: [], researchField: [], publicationRange: [0, 100], hIndexRange: [0, 50]
     });
     const [selectedFilters, setSelectedFilters] = useState([]);
     const [shouldFetch, setShouldFetch] = useState(true);
@@ -511,6 +511,28 @@ function Search({isMobile}) {
             });
     }, [filters, shouldFetch, currentPage, searchParams]);
 
+    // 从 URL 读取筛选条件
+    useEffect(() => {
+        const filtersFromUrl = searchParams.get('filters');
+        if (filtersFromUrl) {
+            try {
+                const parsedFilters = JSON.parse(filtersFromUrl);
+                setFilters(prev => ({
+                    ...prev,
+                    ...parsedFilters
+                }));
+                Object.entries(parsedFilters).forEach(([key, value]) => {
+                    if (value && value.length > 0) {
+                        setSelectedFilters(prev => [...prev, key]);
+                    }
+                });
+                setShouldFetch(true);
+            } catch (err) {
+                console.error('Invalid filters parameter in URL');
+            }
+        }
+    }, [searchParams]);
+
     // 处理分页变化
     const handlePageChange = (event, value) => {
         setCurrentPage(value);
@@ -557,6 +579,7 @@ function Search({isMobile}) {
         setIsDrawerOpen(open);
     };
 
+    const cap = 50;
     return (
         <div>
             <Box sx={{display: 'flex', flexDirection: 'row', padding: '20px'}}>
@@ -652,13 +675,13 @@ function Search({isMobile}) {
                             </Typography>
                         )}
                     </Box>
-                    {searchResults.slice((currentPage - 1) * 10, currentPage * 10).map((result, index) => (
+                    {searchResults.slice((currentPage - 1) * cap, currentPage * cap).map((result, index) => (
                         <TeacherCard key={index} result={result}/>
                     ))}
                 </Box>
             </Box>
             <Box sx={{display: 'flex', padding: '20px', alignItems: 'center', justifyContent: 'center'}}>
-                <Pagination count={Math.ceil(totalResults / 10)} page={currentPage} onChange={handlePageChange}/>
+                <Pagination count={Math.ceil(totalResults / cap)} page={currentPage} onChange={handlePageChange}/>
                 <IconButton onClick={scrollToTop}>
                     <ArrowUpwardIcon/>
                 </IconButton>
