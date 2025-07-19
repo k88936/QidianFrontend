@@ -490,11 +490,14 @@ function Search({isMobile}) {
     // 使用 useEffect 钩子来触发搜索请求
     useEffect(() => {
         if (!shouldFetch) return;
-
+        setShouldFetch(false);
+        if (searchParams.get('query') === '') {
+            return;
+        }
         setIsLoading(true);
-        console.log(`Searching for: ${(searchParams.get('query') || '')}`);
+        console.log(`Searching for: ${searchParams.get('query')}`);
         console.log(encodeURIComponent(searchParams.get('query') || ''))
-        fetch(`${backend_addr}/search?query=${encodeURIComponent(searchParams.get('query') || '')}&page=${currentPage}&filters=${JSON.stringify(filters)}`)
+        fetch(`${backend_addr}/search?query=${encodeURIComponent(searchParams.get('query'))}&page=${currentPage}&filters=${JSON.stringify(filters)}`)
             .then(response => response.json())
             .then(data => {
                 setSearchResults(data['docs']);
@@ -506,7 +509,6 @@ function Search({isMobile}) {
                 console.error('Error fetching Search results:', error);
             })
             .finally(() => {
-                setShouldFetch(false);
                 setIsLoading(false);
             });
     }, [filters, shouldFetch, currentPage, searchParams]);
@@ -521,12 +523,13 @@ function Search({isMobile}) {
                     ...prev,
                     ...parsedFilters
                 }));
+                setSelectedFilters([])
                 Object.entries(parsedFilters).forEach(([key, value]) => {
                     if (value && value.length > 0) {
                         setSelectedFilters(prev => [...prev, key]);
                     }
                 });
-                setShouldFetch(true);
+                // setShouldFetch(true);
             } catch (err) {
                 console.error('Invalid filters parameter in URL');
             }
@@ -633,47 +636,53 @@ function Search({isMobile}) {
                 }}>
                     {/* 新增的搜索输入区域 */}
                     <Box sx={{width: '100%', padding: '10px', marginBottom: '20px'}}>
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Box sx={{display: 'flex', alignItems: 'center'}}>
                             <TextField
                                 fullWidth
                                 label="输入搜索关键词"
                                 variant="outlined"
                                 defaultValue={searchParams.get('query') || ''}
                                 onChange={(e) => {
+                                    setShouldFetch(false);
                                     const newQuery = e.target.value;
-                                    // 更新搜索参数
+                                    const trimmedQuery = newQuery.trim();
                                     const newSearchParams = new URLSearchParams(searchParams);
-                                    if (newQuery) {
-                                        newSearchParams.set('query', newQuery);
-                                    } else {
-                                        newSearchParams.delete('query');
-                                    }
-                                    // 更新 URL 并触发搜索
+                                    newSearchParams.set('query', trimmedQuery);
                                     setSearchParams(newSearchParams)
-                                    setShouldFetch(true)
-                                    window.history.pushState(null, '', `?${newSearchParams.toString()}`);
                                 }}
                             />
                             <Button
                                 variant="contained"
                                 color="primary"
-                                onClick={() => setShouldFetch(true)}
-                                sx={{ ml: 2, height: '55px' }}
+                                onClick={() => {
+                                    const currentQuery = searchParams.get('query') || '';
+                                    if (currentQuery.trim() === '') {
+                                        alert('查询参数不能为空或空白字符');
+                                        return;
+                                    }
+                                    setShouldFetch(true);
+                                }}
+                                sx={{ml: 2, height: '55px'}}
                             >
                                 搜索
                             </Button>
                         </Box>
                     </Box>
                     <Box sx={{padding: '20px', backgroundColor: '#f0f0f0'}}>
-                        {isLoading ? (
-                            <Typography variant="h6">
-                                正在搜索中...
-                            </Typography>
-                        ) : (
-                            <Typography variant="h6">
-                                共找到 {totalResults} 位导师(展示前一百位)，条件：{searchParams.get('query') || ''}，筛选条件：{formatFilters(filters)}
-                            </Typography>
-                        )}
+                        {
+                            searchParams.get('query') === '' || searchParams.get('query') === null ? (
+                                <Typography variant="h6">
+                                    请输入搜索关键词
+                                </Typography>
+                            ) : isLoading ? (
+                                <Typography variant="h6">
+                                    正在搜索中...
+                                </Typography>
+                            ) : (
+                                <Typography variant="h6">
+                                    共找到 {totalResults} 位导师(展示前一百位)，条件：{searchParams.get('query') || ''}，筛选条件：{formatFilters(filters)}
+                                </Typography>
+                            )}
                     </Box>
                     {searchResults.slice((currentPage - 1) * cap, currentPage * cap).map((result, index) => (
                         <TeacherCard key={index} result={result}/>
