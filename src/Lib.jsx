@@ -28,7 +28,7 @@ function Lib() {
             const nodeId = nodeIds[0];
             if (nodeId.startsWith('school:')) {
                 const schoolName = nodeId.split(':')[1];
-                navigate(`/search?filters=${encodeURIComponent(JSON.stringify({school: [schoolName]}))}`);
+                //navigate(`/search?filters=${encodeURIComponent(JSON.stringify({school: [schoolName]}))}`);
             }
         }
     };
